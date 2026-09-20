@@ -44,26 +44,26 @@ During autoregressive decoding, the model generates one token at a time. At ever
 
 Increasing the batch size allows the same loaded weights to serve multiple sequences. Weight traffic does not grow proportionally with the batch size, but FLOPs do, so arithmetic intensity and GPU utilization improve.
 
-$
+$$
 \text{Arithmetic intensity}
 =
 \frac{\text{FLOPs}}{\text{bytes transferred}}
-$
+$$
 
 For memory-bound decoding:
 
-$
+$$
 \text{latency per token}
 \approx
 \frac{\text{bytes read per decoding step}}
 {\text{HBM bandwidth}}
-$
+$$
 
 For a batched linear layer:
 
-$
+$$
 Y_{B\times d_{out}}=X_{B\times d_{in}}W_{d_{in}\times d_{out}}
-$
+$$
 
 The same weight matrix is reused across the $B$ sequences. Quantization reduces parameter bytes transferred, while MQA, GQA, KV-cache quantization, and paged memory management reduce KV-cache capacity or bandwidth costs.
 
@@ -92,9 +92,9 @@ I would convert all tasks into a unified instruction-response format so the mode
 
 Sampling directly in proportion to dataset size can cause large datasets to dominate. Temperature-based task sampling provides control:
 
-$
+$$
 p_i=\frac{n_i^\alpha}{\sum_j n_j^\alpha}
-$
+$$
 
 where $n_i$ is the size of task $i$:
 
@@ -104,9 +104,9 @@ where $n_i$ is the size of task $i$:
 
 The total objective may be:
 
-$
+$$
 \mathcal{L}=\sum_i\lambda_i\mathcal{L}_i
-$
+$$
 
 The weights $\lambda_i$ can reflect task importance, loss scale, learning progress, or gradient magnitude. For conflicting tasks, possible approaches include PCGrad, dynamic loss weighting, balanced sampling, or task-specific adapters or heads.
 
@@ -116,9 +116,9 @@ For scale, I would combine data parallelism with tensor or pipeline parallelism 
 
 If Task A contains 100 million examples and Task B contains 100,000, combined-example sampling gives:
 
-$
+$$
 P(A)\approx99.9\%,\qquad P$B$\approx0.1\%
-$
+$$
 
 Task B receives almost no training signal. Corrections include temperature sampling, task-uniform sampling, weighted losses, minimum task quotas, or controlled oversampling.
 
@@ -142,15 +142,15 @@ Explain the difference between tensor parallelism and pipeline parallelism, incl
 
 Tensor parallelism partitions tensors and computation **within a layer**. For:
 
-$
+$$
 Y=XW
-$
+$$
 
 the weights can be partitioned:
 
-$
+$$
 W=[W_1\;W_2],\qquad Y_1=XW_1,\quad Y_2=XW_2
-$
+$$
 
 Multiple GPUs jointly compute the same layer and combine partial results using all-reduce, all-gather, or reduce-scatter. Communication occurs multiple times per Transformer block, so tensor parallelism works best over high-bandwidth links such as NVLink or NVSwitch.
 
@@ -169,9 +169,9 @@ Microbatches flow through these stages. Adjacent stages exchange activations dur
 
 A pipeline bubble is GPU idle time during pipeline fill and drain, or when a faster stage waits for a slower stage. For a simplified forward pipeline with $p$ stages and $m$ microbatches:
 
-$
+$$
 \text{bubble fraction}\approx\frac{p-1}{m+p-1}
-$
+$$
 
 Increasing the number of microbatches reduces the relative fill-and-drain overhead, although too many microbatches can add scheduling overhead or reduce kernel efficiency.
 
@@ -207,7 +207,7 @@ How would you design a low-latency online LLM inference service?
 
 For a long prompt:
 
-$
+$$
 \text{TTFT}
 \approx
 \text{queueing}
@@ -215,7 +215,7 @@ $
 \text{prefill}
 +
 \text{first decode step}
-$
+$$
 
 Long prompts most directly increase TTFT because the service must process the prompt and construct its KV cache before generating the first token. They can also increase TPOT because each generated token attends over a larger cache.
 
