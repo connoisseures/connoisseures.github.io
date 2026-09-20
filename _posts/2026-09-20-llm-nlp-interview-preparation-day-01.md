@@ -3,7 +3,7 @@ layout: post
 title: "LLM & NLP Interview Preparation — Day 01: Questions 1–5"
 date: 2026-09-20
 math: true
-categories: [interview-preparation, llm]
+categories: [LLM, Interview Preparation, Questions]
 tags: [llm-inference, attention, kv-cache, quantization, long-context]
 description: Day 01 interview notes covering GPT inference optimization, Transformer attention, KV caching, model quantization, and 128K long-context design.
 ---

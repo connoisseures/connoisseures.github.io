@@ -2,7 +2,7 @@
 layout: post
 title: "LLM Coding & Debugging Interview — Question 2: Debugging Causal-LM Training Loss"
 date: 2026-09-19
-categories: [interview-preparation, llm]
+categories: [LLM, Interview Preparation, debugging]
 tags: [causal-lm, training, debugging, mixed-precision, gradient-accumulation]
 ---
 
