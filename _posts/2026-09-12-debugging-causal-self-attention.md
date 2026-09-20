@@ -1,5 +1,5 @@
 ---
-title: "LLM Coding Interview: Debugging Causal Self-Attention"
+title: "LLM Coding & Debugging Interview — Question 1: Debugging Causal Self-Attention"
 date: 2026-09-12 00:00:00 +0000
 categories: [LLM, Interview Preparation, debugging]
 tags: [attention, causal-mask, padding-mask, numpy, debugging]
