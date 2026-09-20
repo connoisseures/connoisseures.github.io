@@ -3,7 +3,7 @@ layout: post
 title: "LLM & NLP Interview Preparation — Day 02: Questions 6–10"
 date: 2026-09-20
 math: true
-categories: [interview-preparation, llm]
+categories: [LLM, Interview Preparation, Questions]
 tags: [flashattention, pipeline-parallelism, tensor-parallelism, inference-optimization, gradient-accumulation]
 description: "Day 02 study notes covering FlashAttention, pipeline and mixed parallelism, inference optimization, and gradient accumulation."
 ---
