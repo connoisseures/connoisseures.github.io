@@ -1,7 +1,7 @@
 ---
 title: "LLM Coding Interview: Debugging Causal Self-Attention"
 date: 2026-09-12 00:00:00 +0000
-categories: [Interview Preparation, LLM]
+categories: [LLM, Interview Preparation]
 tags: [attention, causal-mask, padding-mask, numpy, debugging]
 description: A step-by-step debugging exercise covering attention scaling, causal masking, stable softmax, broadcasting, and padded query outputs.
 ---
