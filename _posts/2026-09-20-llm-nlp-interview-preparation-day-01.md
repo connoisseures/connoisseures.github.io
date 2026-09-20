@@ -2,6 +2,7 @@
 layout: post
 title: "LLM & NLP Interview Preparation — Day 01: Questions 1–5"
 date: 2026-09-20
+math: true
 categories: [interview-preparation, llm]
 tags: [llm-inference, attention, kv-cache, quantization, long-context]
 description: Day 01 interview notes covering GPT inference optimization, Transformer attention, KV caching, model quantization, and 128K long-context design.
@@ -32,15 +33,6 @@ Questions 1–5 from the LLM & NLP interview-preparation sequence based on the [
 ## Interview question
 
 When deploying a GPT-like model at scale, how would you reduce inference latency without significantly reducing model quality?
-
-## Initial answer
-
-- Aggregate requests through batching and use continuous batching. Configure maximum batch size and maximum waiting time.
-- Use a KV cache during decoding and prefix caching when users share the same system prompt.
-- Quantize the model to balance quality and speed.
-- Use FlashAttention to reduce HBM traffic.
-- Use kernel fusion and CUDA Graphs to reduce launch overhead.
-- Use speculative decoding, where a smaller model proposes tokens and the target model verifies them.
 
 ## Review
 
@@ -91,41 +83,37 @@ Mitigations include:
 
 Explain the Transformer attention mechanism and its computational complexity.
 
-## Initial answer
-
-Attention uses queries, keys, and values to capture relationships between tokens. Learned matrices produce Q, K, and V. The attention cost is \(O(n^2d)\). Multi-head attention captures different semantic information. MQA shares one K/V head, while GQA shares multiple K/V heads across groups of query heads.
-
 ## Correct formulation
 
 Given input
 
-\[
+$
 X\in\mathbb{R}^{B\times n\times d_{\text{model}}},
-\]
+$
 
 the learned projections are
 
-\[
+$
 Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V.
-\]
+$
 
 Scaled dot-product attention is
 
-\[
+$
 \operatorname{Attention}(Q,K,V)
 =
 \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V,
-\]
+$
 
-where \(M\) is an optional causal or padding mask. Scaling must occur **before** softmax.
+where $M$ is an optional causal or padding mask. Scaling must occur **before** softmax.
 
-If the components of Q and K have roughly unit variance, their dot product has variance proportional to \(d_k\). Dividing by \(\sqrt{d_k}\) keeps logits at a stable scale and prevents softmax saturation.
+If the components of Q and K have roughly unit variance, their dot product has variance proportional to $d_k$. Dividing by $\sqrt{d_k}$ keeps logits at a stable scale and prevents softmax saturation.
 
 ## Complexity
 
-- Linear projections: \(O(nd_{\text{model}}^2)\)
-- Attention scores and weighted sum: \(O(n^2d_{\text{model}})\)
-- Naive attention-matrix memory: \(O(n^2)\)
+- Linear projections: $O(nd_{\text{model}}^2)$
+- Attention scores and weighted sum: $O(n^2d_{\text{model}})$
+- Naive attention-matrix memory: $O(n^2)$
 
 The quadratic term becomes the dominant challenge at long sequence lengths.
 
@@ -139,9 +127,9 @@ MQA and GQA reduce KV-cache memory and decoding bandwidth, but they do not elimi
 
 ## Interview-ready answer
 
-Self-attention allows every token to aggregate information from other tokens according to learned relevance scores. The model projects the input into Q, K, and V. The product \(QK^\top\) produces pairwise token scores. Scaling stabilizes their magnitude, a mask enforces causal or padding constraints, and softmax converts each row into weights used to combine value vectors.
+Self-attention allows every token to aggregate information from other tokens according to learned relevance scores. The model projects the input into Q, K, and V. The product $QK^\top$ produces pairwise token scores. Scaling stabilizes their magnitude, a mask enforces causal or padding constraints, and softmax converts each row into weights used to combine value vectors.
 
-Multi-head attention performs this operation in several learned representation subspaces, allowing heads to capture different relationships. Its attention computation costs \(O(n^2d)\), while the projections cost \(O(nd^2)\). Naive attention also materializes a quadratic score matrix.
+Multi-head attention performs this operation in several learned representation subspaces, allowing heads to capture different relationships. Its attention computation costs $O(n^2d)$, while the projections cost $O(nd^2)$. Naive attention also materializes a quadratic score matrix.
 
 MQA and GQA reduce the number of K/V heads, decreasing cache size and memory bandwidth during decoding, although each query head must still attend over all token positions.
 
@@ -149,39 +137,39 @@ MQA and GQA reduce the number of K/V heads, decreasing cache size and memory ban
 
 Given
 
-\[
+$
 B=2,\quad n=1024,\quad d_{\text{model}}=4096,\quad h=32,
-\]
+$
 
 the per-head dimension is
 
-\[
+$
 d_h=4096/32=128.
-\]
+$
 
 ### Standard multi-head attention
 
 | Tensor | Shape |
 |---|---|
-| Q | \([2,32,1024,128]\) |
-| K | \([2,32,1024,128]\) |
-| V | \([2,32,1024,128]\) |
-| Attention scores | \([2,32,1024,1024]\) |
-| Per-head result | \([2,32,1024,128]\) |
-| Concatenated output | \([2,1024,4096]\) |
+| Q | $[2,32,1024,128]$ |
+| K | $[2,32,1024,128]$ |
+| V | $[2,32,1024,128]$ |
+| Attention scores | $[2,32,1024,1024]$ |
+| Per-head result | $[2,32,1024,128]$ |
+| Concatenated output | $[2,1024,4096]$ |
 
 ### Multi-query attention
 
 | Tensor | Shape |
 |---|---|
-| Q | \([2,32,1024,128]\) |
-| K | \([2,1,1024,128]\) |
-| V | \([2,1,1024,128]\) |
-| Attention scores | \([2,32,1024,1024]\) |
-| Per-head result | \([2,32,1024,128]\) |
-| Concatenated output | \([2,1024,4096]\) |
+| Q | $[2,32,1024,128]$ |
+| K | $[2,1,1024,128]$ |
+| V | $[2,1,1024,128]$ |
+| Attention scores | $[2,32,1024,1024]$ |
+| Per-head result | $[2,32,1024,128]$ |
+| Concatenated output | $[2,1024,4096]$ |
 
-The initial \([2,1024,128]\) answer described a single head with the head axis omitted. The final output concatenates all 32 heads back to \(d_{\text{model}}=4096\).
+The initial $[2,1024,128]$ answer described a single head with the head axis omitted. The final output concatenates all 32 heads back to $d_{\text{model}}=4096$.
 
 ---
 
@@ -191,52 +179,48 @@ The initial \([2,1024,128]\) answer described a single head with the head axis o
 
 What is a KV cache, and how does it improve autoregressive LLM inference?
 
-## Initial answer
-
-A KV cache stores the K and V values of previous tokens so only the new token's K and V must be computed. It reduces repeated computation but increases memory demand. Memory is roughly proportional to the number of layers, sequence length, hidden dimension, and bytes per element.
-
 ## Why K and V are cached but Q is not
 
-At decoding step \(t\), the new query attends to all earlier keys and values:
+At decoding step $t$, the new query attends to all earlier keys and values:
 
-\[
+$
 q_tK_{1:t}^{\top}.
-\]
+$
 
 Earlier queries are not reused because their corresponding attention outputs have already been computed. Each layer therefore computes the new token's Q, K, and V, appends K and V to the cache, and discards Q after producing the output.
 
 ## Complexity
 
-At decoding step \(t\):
+At decoding step $t$:
 
-- Without caching, reprocessing the full prefix requires approximately \(O(t^2d)\) attention work.
-- With caching, the new query attends to \(t\) cached positions in \(O(td)\).
+- Without caching, reprocessing the full prefix requires approximately $O(t^2d)$ attention work.
+- With caching, the new query attends to $t$ cached positions in $O(td)$.
 
-Across \(T\) generated tokens, the approximate attention cost changes from \(O(T^3d)\) without caching to \(O(T^2d)\) with caching. KV caching does not make attention constant-time because each new query still scans the growing cache.
+Across $T$ generated tokens, the approximate attention cost changes from $O(T^3d)$ without caching to $O(T^2d)$ with caching. KV caching does not make attention constant-time because each new query still scans the growing cache.
 
 ## Memory formula
 
-\[
+$
 M_{\text{KV}}=2LBTH_{kv}d_hs,
-\]
+$
 
 where:
 
 - 2 represents K and V
-- \(L\) is the layer count
-- \(B\) is batch size
-- \(T\) is cached sequence length
-- \(H_{kv}\) is the number of KV heads
-- \(d_h\) is the head dimension
-- \(s\) is bytes per element
+- $L$ is the layer count
+- $B$ is batch size
+- $T$ is cached sequence length
+- $H_{kv}$ is the number of KV heads
+- $d_h$ is the head dimension
+- $s$ is bytes per element
 
-For standard MHA, \(H_{kv}d_h=d_{\text{model}}\). GQA and MQA reduce \(H_{kv}\), decreasing cache size and bandwidth.
+For standard MHA, $H_{kv}d_h=d_{\text{model}}$. GQA and MQA reduce $H_{kv}$, decreasing cache size and bandwidth.
 
 ## Interview-ready answer
 
 A KV cache stores keys and values produced for previous tokens at every Transformer layer. During decoding, those tensors do not change, so caching them avoids recomputing the full prefix at every step. Previous queries are not cached because their attention outputs have already been calculated.
 
-At step \(t\), using the cache reduces attention work from approximately \(O(t^2d)\) to \(O(td)\). The trade-off is memory that grows linearly with batch size, layers, context length, KV heads, head dimension, and precision.
+At step $t$, using the cache reduces attention work from approximately $O(t^2d)$ to $O(td)$. The trade-off is memory that grows linearly with batch size, layers, context length, KV heads, head dimension, and precision.
 
 Long contexts and high concurrency can exhaust GPU memory and limit batching. Mitigations include GQA/MQA, paged allocation, KV-cache quantization, prefix sharing, sliding-window attention, eviction policies, and admission control.
 
@@ -244,25 +228,25 @@ Long contexts and high concurrency can exhaust GPU memory and limit batching. Mi
 
 Given
 
-\[
+$
 L=32,\quad B=1,\quad T=4096,\quad H_{kv}=8,\quad d_h=128,
-\]
+$
 
 with BF16 storage:
 
-\[
+$
 2\times32\times1\times4096\times8\times128=2^{28}\text{ elements}.
-\]
+$
 
 BF16 uses 2 bytes per element:
 
-\[
+$
 2^{28}\times2=2^{29}\text{ bytes}
 =536{,}870{,}912\text{ bytes}
 =512\text{ MiB}.
-\]
+$
 
-The initial \(2^{28}\) result was the element count; converting to bytes required the additional BF16 factor.
+The initial $2^{28}$ result was the element count; converting to bytes required the additional BF16 factor.
 
 ---
 
@@ -271,10 +255,6 @@ The initial \(2^{28}\) result was the element count; converting to bytes require
 ## Interview question
 
 What types of model quantization are commonly used, and when would you use each one?
-
-## Initial answer
-
-Weight quantization and KV-cache quantization can be used. Post-training quantization is faster to perform, but it may degrade model accuracy.
 
 ## Main categories
 
@@ -330,7 +310,7 @@ Ignoring scales and other metadata, a 70-billion-parameter model requires:
 
 These values exclude scales, zero points, packing overhead, temporary buffers, and KV-cache memory.
 
-The initial calculation used \(70\times10^{12}\) instead of \(70\times10^9\), and used FP32/FP16/INT8 byte widths rather than FP16/INT8/INT4 widths.
+The initial calculation used $70\times10^{12}$ instead of $70\times10^9$, and used FP32/FP16/INT8 byte widths rather than FP16/INT8/INT4 widths.
 
 ---
 
@@ -340,10 +320,6 @@ The initial calculation used \(70\times10^{12}\) instead of \(70\times10^9\), an
 
 How would you design an LLM to support long contexts such as 128K tokens?
 
-## Initial answer
-
-Use RoPE for positional encoding, a KV cache to avoid repeated computation, sparse attention to reduce computation, and RAG to retrieve relevant information.
-
 ## Design considerations
 
 ### Positional encoding
@@ -352,7 +328,7 @@ RoPE alone does not guarantee 128K generalization. A shorter-context model typic
 
 ### Attention computation
 
-Standard attention costs \(O(n^2d)\). FlashAttention reduces HBM traffic and avoids materializing the full attention matrix, but it does not reduce the quadratic FLOP count. Sliding-window, block-sparse, dilated, or global-token attention can reduce asymptotic work, with a possible loss of long-range interactions.
+Standard attention costs $O(n^2d)$. FlashAttention reduces HBM traffic and avoids materializing the full attention matrix, but it does not reduce the quadratic FLOP count. Sliding-window, block-sparse, dilated, or global-token attention can reduce asymptotic work, with a possible loss of long-range interactions.
 
 ### KV-cache memory
 
@@ -388,17 +364,17 @@ I would train with a sequence-length curriculum and examples requiring real long
 
 The sequence-length multiplier is
 
-\[
+$
 \frac{131{,}072}{4{,}096}=32.
-\]
+$
 
 Because cache memory is linear in sequence length:
 
-\[
+$
 512\text{ MiB}\times32
 =16{,}384\text{ MiB}
 =16\text{ GiB}.
-\]
+$
 
 KV caching prevents recomputation, but it does not remove the growing attention scan or solve cache-capacity constraints.
 
@@ -419,21 +395,21 @@ KV caching prevents recomputation, but it does not remove the growing attention 
 
 ## Core formulas
 
-\[
+$
 \operatorname{Attention}(Q,K,V)
 =\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V
-\]
+$
 
-\[
+$
 M_{\text{KV}}=2LBTH_{kv}d_hs
-\]
+$
 
-\[
+$
 d_h=\frac{d_{\text{model}}}{h}
-\]
+$
 
 For raw model-weight storage:
 
-\[
+$
 \text{bytes}=\text{parameter count}\times\text{bytes per parameter}.
-\]
+$
