@@ -87,23 +87,23 @@ Explain the Transformer attention mechanism and its computational complexity.
 
 Given input
 
-$
+$$
 X\in\mathbb{R}^{B\times n\times d_{\text{model}}},
-$
+$$
 
 the learned projections are
 
-$
+$$
 Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V.
-$
+$$
 
 Scaled dot-product attention is
 
-$
+$$
 \operatorname{Attention}(Q,K,V)
 =
 \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V,
-$
+$$
 
 where $M$ is an optional causal or padding mask. Scaling must occur **before** softmax.
 
@@ -137,15 +137,15 @@ MQA and GQA reduce the number of K/V heads, decreasing cache size and memory ban
 
 Given
 
-$
+$$
 B=2,\quad n=1024,\quad d_{\text{model}}=4096,\quad h=32,
-$
+$$
 
 the per-head dimension is
 
-$
+$$
 d_h=4096/32=128.
-$
+$$
 
 ### Standard multi-head attention
 
@@ -183,9 +183,9 @@ What is a KV cache, and how does it improve autoregressive LLM inference?
 
 At decoding step $t$, the new query attends to all earlier keys and values:
 
-$
+$$
 q_tK_{1:t}^{\top}.
-$
+$$
 
 Earlier queries are not reused because their corresponding attention outputs have already been computed. Each layer therefore computes the new token's Q, K, and V, appends K and V to the cache, and discards Q after producing the output.
 
@@ -200,9 +200,9 @@ Across $T$ generated tokens, the approximate attention cost changes from $O(T^3d
 
 ## Memory formula
 
-$
+$$
 M_{\text{KV}}=2LBTH_{kv}d_hs,
-$
+$$
 
 where:
 
@@ -228,23 +228,23 @@ Long contexts and high concurrency can exhaust GPU memory and limit batching. Mi
 
 Given
 
-$
+$$
 L=32,\quad B=1,\quad T=4096,\quad H_{kv}=8,\quad d_h=128,
-$
+$$
 
 with BF16 storage:
 
-$
+$$
 2\times32\times1\times4096\times8\times128=2^{28}\text{ elements}.
-$
+$$
 
 BF16 uses 2 bytes per element:
 
-$
+$$
 2^{28}\times2=2^{29}\text{ bytes}
 =536{,}870{,}912\text{ bytes}
 =512\text{ MiB}.
-$
+$$
 
 The initial $2^{28}$ result was the element count; converting to bytes required the additional BF16 factor.
 
@@ -364,17 +364,17 @@ I would train with a sequence-length curriculum and examples requiring real long
 
 The sequence-length multiplier is
 
-$
+$$
 \frac{131{,}072}{4{,}096}=32.
-$
+$$
 
 Because cache memory is linear in sequence length:
 
-$
+$$
 512\text{ MiB}\times32
 =16{,}384\text{ MiB}
 =16\text{ GiB}.
-$
+$$
 
 KV caching prevents recomputation, but it does not remove the growing attention scan or solve cache-capacity constraints.
 
@@ -395,21 +395,21 @@ KV caching prevents recomputation, but it does not remove the growing attention 
 
 ## Core formulas
 
-$
+$$
 \operatorname{Attention}(Q,K,V)
 =\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V
-$
+$$
 
-$
+$$
 M_{\text{KV}}=2LBTH_{kv}d_hs
-$
+$$
 
-$
+$$
 d_h=\frac{d_{\text{model}}}{h}
-$
+$$
 
 For raw model-weight storage:
 
-$
+$$
 \text{bytes}=\text{parameter count}\times\text{bytes per parameter}.
-$
+$$
