@@ -153,15 +153,15 @@ Thinker
 
 A 10 ms hop gives approximately 100 Mel frames per second. After 8× downsampling:
 
-\[
+$
 100 / 8 = 12.5 \text{ representations/s}
-\]
+$
 
 Therefore each output representation corresponds to approximately:
 
-\[
+$
 1/12.5 = 0.08 \text{ s} = 80 \text{ ms}
-\]
+$
 
 ### Why this matters
 
@@ -183,9 +183,9 @@ The reduction is crucial for attention cost and KV-cache pressure in long-contex
 
 AuT produces continuous representations:
 
-\[
+$
 H = [h_1, h_2, \ldots, h_n], \quad h_i \in \mathbb{R}^d
-\]
+$
 
 These representations enter the Thinker directly.
 
@@ -241,9 +241,9 @@ Audio and video need a shared notion of time. Qwen3-Omni uses **TM-RoPE**, a tim
 
 For vision, positional information can involve temporal and spatial dimensions:
 
-\[
+$
 (T,H,W)
-\]
+$
 
 For audio, the temporal granularity is naturally approximately 80 ms because AuT emits 12.5 representations per second.
 
@@ -263,11 +263,11 @@ The goal is to let the Thinker reason about synchronized audiovisual events with
 
 For output speech, one acoustic frame is represented using multiple codec codebooks.
 
-Given a continuous acoustic vector \(z\), RVQ approximates it progressively:
+Given a continuous acoustic vector $z$, RVQ approximates it progressively:
 
-\[
+$
 z \approx e_{c_0} + e_{c_1} + e_{c_2} + \cdots + e_{c_K}
-\]
+$
 
 Conceptually:
 
@@ -285,9 +285,9 @@ z
 
 A frame is therefore represented as:
 
-\[
+$
 C_t = (c_t^0,c_t^1,\ldots,c_t^K)
-\]
+$
 
 The extra codebooks increase acoustic representation capacity for voice identity, timbre, prosody, and other detailed characteristics.
 
@@ -301,9 +301,9 @@ A naive design could make the large Talker autoregressively predict every codebo
 
 The Talker predicts the primary codebook token:
 
-\[
+$
 c_t^0
-\]
+$
 
 for each temporal frame.
 
@@ -346,9 +346,9 @@ The output codec rate is also approximately **12.5 frames per second**.
 
 Therefore:
 
-\[
+$
 1 / 12.5 = 80 \text{ ms}
-\]
+$
 
 One Talker step corresponds to roughly 80 ms of output speech.
 
@@ -383,7 +383,7 @@ Code2Wav
 PLAY
 ```
 
-Causality matters because the decoder does not need future codec frames. A non-causal decoder might require \(C_{t+1}\) or \(C_{t+2}\), forcing the system to wait.
+Causality matters because the decoder does not need future codec frames. A non-causal decoder might require $C_{t+1}$ or $C_{t+2}$, forcing the system to wait.
 
 The hierarchy is:
 
@@ -414,9 +414,9 @@ The paper reports a theoretical cold-start first-audio-packet latency of approxi
 | Codec decoder | 3 ms |
 | **Total** | **234 ms** |
 
-\[
+$
 72 + 88 + 57 + 14 + 3 = 234 \text{ ms}
-\]
+$
 
 This is a theoretical first-packet figure for the specified setup, not a universal real-world latency guarantee.
 
@@ -424,15 +424,15 @@ This is a theoretical first-packet figure for the specified setup, not a univers
 
 For streaming speech generation:
 
-\[
+$
 RTF = \frac{\text{generation time}}{\text{audio duration}}
-\]
+$
 
 Real-time playback requires:
 
-\[
+$
 RTF < 1
-\]
+$
 
 The paper reports RTF below 1 in the evaluated concurrency settings discussed in our study, meaning generation can remain ahead of playback under those conditions.
 
@@ -459,9 +459,9 @@ Once the Thinker has processed an input chunk, corresponding multimodal represen
 
 A compact mnemonic is:
 
-\[
+$
 \boxed{\text{Align}} \rightarrow \boxed{\text{Integrate}} \rightarrow \boxed{\text{Extend}}
-\]
+$
 
 ### Stage 1 — Encoder alignment
 
@@ -508,9 +508,9 @@ The model also uses varied natural-language prompts instead of relying on one ri
 
 The context length is extended approximately:
 
-\[
+$
 8K \rightarrow 32K
-\]
+$
 
 while increasing long-audio and long-video examples. This is important because simply changing a context-window configuration does not teach the model to use long-range information effectively.
 
@@ -601,9 +601,9 @@ Speaker fine-tuning improves particular voices, naturalness, expressiveness, and
 
 For ASR, lower WER is better:
 
-\[
+$
 WER = \frac{S + D + I}{N}
-\]
+$
 
 Representative paper-reported results discussed in our study:
 
@@ -647,9 +647,9 @@ ASR may only produce the spoken sentence. A native audio model can potentially r
 
 The core idea is:
 
-\[
+$
 \boxed{\text{Audio understanding} \neq \text{ASR}}
-\]
+$
 
 ---
 
@@ -755,9 +755,9 @@ However, available quantitative speech-generation benchmarks are still heavily T
 
 When text, vision, and audio share one model, their training gradients can conflict:
 
-\[
+$
 \nabla L_{text}, \quad \nabla L_{vision}, \quad \nabla L_{audio}
-\]
+$
 
 A major concern is negative transfer: improving audio could damage text reasoning or vision.
 
@@ -842,16 +842,16 @@ A genuinely full-duplex system needs simultaneous listening and speaking plus an
 
 A simple endpoint detector might estimate:
 
-\[
+$
 P(\text{speech ended})
-\]
+$
 
 But a conversational speech LLM needs something closer to:
 
-\[
+$
 P(\text{assistant should respond now}\mid
 \text{audio, prosody, semantics, dialogue context, model state})
-\]
+$
 
 Example:
 
@@ -891,9 +891,9 @@ This is an interaction-control problem beyond low-latency synthesis.
 
 With an open microphone during assistant playback, the observed signal may be:
 
-\[
+$
 x(t)=\text{user}(t)+\text{assistant output}(t)+\text{environment}(t)
-\]
+$
 
 A production system may need:
 
@@ -930,7 +930,7 @@ This can reduce perceived latency dramatically.
 
 Perceived conversational latency is better modeled as:
 
-\[
+$
 T_{conversation}
 =
 T_{turn\ decision}
@@ -938,7 +938,7 @@ T_{turn\ decision}
 T_{model\ response}
 +
 T_{first\ audio}
-\]
+$
 
 For example, if semantic endpointing adds 600 ms and speech generation requires 234 ms to first packet, the user may wait approximately 834 ms.
 
@@ -1019,7 +1019,7 @@ full-duplex interaction
 
 The research progression can be summarized as:
 
-\[
+$
 \boxed{\text{Audio Understanding}}
 \rightarrow
 \boxed{\text{Audio-Language Interaction}}
@@ -1029,7 +1029,7 @@ The research progression can be summarized as:
 \boxed{\text{Real-Time Omni Interaction}}
 \rightarrow
 \boxed{\text{Full-Duplex Interaction}}
-\]
+$
 
 ---
 
