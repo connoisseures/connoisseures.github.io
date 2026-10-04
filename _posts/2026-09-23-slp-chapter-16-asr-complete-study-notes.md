@@ -1,7 +1,7 @@
 ---
 title: "Speech and Language Processing Chapter 16: Automatic Speech Recognition"
 date: 2026-09-23 00:00:00 +0000
-categories: [Speech LLM, ASR]
+categories: [Speech, ASR]
 tags: [speech-recognition, cnn, encoder-decoder, whisper, hubert, ctc, rnnt, streaming, word-error-rate, endpointing]
 description: Complete Chapter 16 study notes covering convolutional front ends, encoder-decoder ASR, HuBERT, CTC, RNN-T, word error rate, and practical endpoint detection, with equations and corrected concept checks.
 math: true
